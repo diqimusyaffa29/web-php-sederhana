@@ -1,21 +1,34 @@
 <?php
-    include "service/database.php";
-    $register_message = "";
-    if (isset($_POST['login'])) {
-        $username = $_POST['username'];
-        $password = $_POST['password'];
+include "service/database.php";
+session_start();
 
-        $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
+$login_message = "";
 
-        $result = $db->query($sql);
-        if($result->num_rows > 0) {
-            $data = $result->fetch_assoc();
-            
-            header("location: dashboard.php");
-        } else {
-            $register_message = "Login Gagal, Silahkan Coba lagi";
-        }
+if (isset($_SESSION["is_login"])) {
+    header("location: dashboard.php");
+}
+
+
+
+if (isset($_POST['login'])) {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    $hash_password = hash("sha256", $password);
+
+    $sql = "SELECT * FROM users WHERE username='$username' AND password='$hash_password'";
+
+    $result = $db->query($sql);
+    if ($result->num_rows > 0) {
+        $data = $result->fetch_assoc();
+        $_SESSION["username"] = $data["username"];
+        $_SESSION["is_login"] = true;
+
+        header("location: dashboard.php");
+    } else {
+        $login_message = "Login Gagal, Silahkan Coba lagi";
     }
+}
+$db->close();
 
 
 
@@ -35,7 +48,7 @@
 <body>
     <?php include "layout/header.html" ?>
     <h3>MASUK AKUN</h3>
-    <i><?= $register_message ?></i>
+    <i><?= $login_message ?></i>
     <form action="login.php" method="post">
         <input type="text" placeholder="Username" name="username">
         <input type="password" placeholder="Password" name="password">
